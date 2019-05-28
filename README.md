@@ -1,6 +1,6 @@
 # firewall
 
-firewall a CoreDNS plugin which performs as a firewall and prevents unauthorized access to protected servers.
+*firewall* is a CoreDNS plugin which performs as a firewall and prevents unauthorized access to protected servers.
 
 With `firewall` enabled, users are able to define ACLs  for any DNS queries, i.e. allowing authorized queries to recurse or blocking unauthorized queries towards protected DNS zones.
 
@@ -11,7 +11,7 @@ This plugin can be used multiple times per Server Block.
 ```
 firewall [ZONES…] {
     ACTION type QTYPE from SOURCE
-    …
+    ...
 }
 ```
 
