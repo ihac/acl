@@ -79,6 +79,9 @@ func setup(c *caddy.Controller) error {
 				return c.ArgErr()
 			}
 			_, rule.source, err = net.ParseCIDR(c.Val())
+			if err != nil {
+				return c.Errf("Illegal CIDR notation '%s'", c.Val())
+			}
 
 			f.Rules = append(f.Rules, rule)
 		}
