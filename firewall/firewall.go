@@ -2,9 +2,11 @@ package firewall
 
 import (
 	"context"
+	"fmt"
 	"net"
 
 	"github.com/coredns/coredns/plugin"
+	"github.com/coredns/coredns/request"
 	"github.com/miekg/dns"
 )
 
@@ -32,8 +34,50 @@ const (
 )
 
 // TODO: impl. (@ihac)
-func (f firewall) ServeDNS(context.Context, dns.ResponseWriter, *dns.Msg) (int, error) {
-	return 0, nil
+func (f firewall) ServeDNS(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) (int, error) {
+	state := request.Request{W: w, Req: r}
+	// check zone
+	zone := plugin.Zones(f.Zones).Matches(state.Name())
+	if zone == "" {
+		return plugin.NextOrFailure(state.Name(), f.Next, ctx, w, r)
+	}
+
+	ip := net.ParseIP(state.IP())
+	if ip == nil {
+		return dns.RcodeRefused, fmt.Errorf("Illegal source ip '%s'", state.IP())
+	}
+	if len(r.Question) != 1 {
+		// TODO: what if #question == 0 or > 1? (@ihac)
+		return plugin.NextOrFailure(state.Name(), f.Next, ctx, w, r)
+	}
+	qtype := r.Question[0].Qtype
+
+	isBlocked := false
+	for _, rule := range f.Rules {
+		if !rule.source.Contains(ip) || dns.Type(qtype) != rule.qtype {
+			continue
+		}
+
+		// matched.
+		switch rule.action {
+		case ALLOW:
+			// continue to check with next rule
+		case BLOCK:
+			isBlocked = true
+			goto Resp
+		}
+	}
+
+Resp:
+	if isBlocked {
+		m := new(dns.Msg)
+		m.SetRcode(r, dns.RcodeRefused)
+		w.WriteMsg(m)
+		// TODO: should we return Success here? (@ihac)
+		return dns.RcodeSuccess, nil
+	}
+	// allow to recurse.
+	return plugin.NextOrFailure(state.Name(), f.Next, ctx, w, r)
 }
 
 // TODO: impl. (@ihac)
