@@ -33,7 +33,6 @@ const (
 	BLOCK string = "block"
 )
 
-// TODO: impl. (@ihac)
 func (f firewall) ServeDNS(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) (int, error) {
 	state := request.Request{W: w, Req: r}
 	// check zone
@@ -80,7 +79,6 @@ Resp:
 	return plugin.NextOrFailure(state.Name(), f.Next, ctx, w, r)
 }
 
-// TODO: impl. (@ihac)
 func (f firewall) Name() string {
 	return "firewall"
 }
