@@ -12,6 +12,12 @@ import (
 	"github.com/miekg/dns"
 )
 
+const (
+	// QtypeAll is used to match any kinds of DNS records type.
+	// NOTE: The value of QtypeAll should be different with other QTYPEs defined in miekg/dns.
+	QtypeAll dns.Type = 260
+)
+
 func init() {
 	caddy.RegisterPlugin("firewall", caddy.Plugin{
 		ServerType: "dns",
@@ -78,7 +84,11 @@ func setup(c *caddy.Controller) error {
 			if !c.NextArg() {
 				return c.ArgErr()
 			}
-			_, rule.source, err = net.ParseCIDR(c.Val())
+			netRange := c.Val()
+			if netRange == "*" || netRange == "ANY" {
+				netRange = "0.0.0.0/0"
+			}
+			_, rule.source, err = net.ParseCIDR(netRange)
 			if err != nil {
 				return c.Errf("Illegal CIDR notation '%s'", c.Val())
 			}
@@ -173,6 +183,10 @@ func parseQype(raw string) (dns.Type, error) {
 		return dns.Type(dns.TypeTXT), nil
 	case "URI":
 		return dns.Type(dns.TypeURI), nil
+	case "ANY":
+		fallthrough
+	case "*":
+		return QtypeAll, nil
 	default:
 		return 0, fmt.Errorf("Unexpected token '%s'; expect legal QTYPE", raw)
 	}

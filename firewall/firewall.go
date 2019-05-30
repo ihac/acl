@@ -53,7 +53,10 @@ func (f firewall) ServeDNS(ctx context.Context, w dns.ResponseWriter, r *dns.Msg
 
 	isBlocked := false
 	for _, rule := range f.Rules {
-		if !rule.source.Contains(ip) || dns.Type(qtype) != rule.qtype {
+		if !rule.source.Contains(ip) {
+			continue
+		}
+		if dns.Type(qtype) != rule.qtype && rule.qtype != QtypeAll {
 			continue
 		}
 
