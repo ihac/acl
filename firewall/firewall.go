@@ -63,7 +63,7 @@ func (f firewall) ServeDNS(ctx context.Context, w dns.ResponseWriter, r *dns.Msg
 		// matched.
 		switch rule.action {
 		case ALLOW:
-			// continue to check with next rule
+			goto Resp
 		case BLOCK:
 			isBlocked = true
 			goto Resp
