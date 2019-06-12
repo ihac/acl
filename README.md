@@ -1,4 +1,5 @@
 # firewall
+[![Build Status](https://travis-ci.com/ihac/firewall.svg?branch=master)](https://travis-ci.com/ihac/firewall)
 
 *firewall* is a CoreDNS plugin which performs as a firewall and prevents unauthorized access to protected servers.
 
