@@ -26,6 +26,19 @@ func init() {
 }
 
 func setup(c *caddy.Controller) error {
+	f, err := parseFirewall(c)
+	if err != nil {
+		return err
+	}
+
+	dnsserver.GetConfig(c).AddPlugin(func(next plugin.Handler) plugin.Handler {
+		f.Next = next
+		return f
+	})
+	return nil
+}
+
+func parseFirewall(c *caddy.Controller) (firewall, error) {
 	f := firewall{}
 	/*
 	 * firewall [ZONES...] {
@@ -55,34 +68,34 @@ func setup(c *caddy.Controller) error {
 			// ACTION type QTYPE from SOURCE
 			rule.action = strings.ToLower(c.Val())
 			if rule.action != ALLOW && rule.action != BLOCK {
-				return c.Errf("Unexpected token '%s'; expect '%s' or '%s'", c.Val(), ALLOW, BLOCK)
+				return f, c.Errf("Unexpected token '%s'; expect '%s' or '%s'", c.Val(), ALLOW, BLOCK)
 			}
 
 			// TODO: simplify the syntax and remove tedious code. (@ihac)
 			if !c.NextArg() {
-				return c.ArgErr()
+				return f, c.ArgErr()
 			}
 			if strings.ToLower(c.Val()) != "type" {
-				return c.Errf("Unexpected token '%s'; expect 'type'", c.Val())
+				return f, c.Errf("Unexpected token '%s'; expect 'type'", c.Val())
 			}
 
 			if !c.NextArg() {
-				return c.ArgErr()
+				return f, c.ArgErr()
 			}
 			rule.qtype, err = parseQype(c.Val())
 			if err != nil {
-				return err
+				return f, err
 			}
 
 			if !c.NextArg() {
-				return c.ArgErr()
+				return f, c.ArgErr()
 			}
 			if strings.ToLower(c.Val()) != "from" {
-				return c.Errf("Unexpected token '%s'; expect 'from'", c.Val())
+				return f, c.Errf("Unexpected token '%s'; expect 'from'", c.Val())
 			}
 
 			if !c.NextArg() {
-				return c.ArgErr()
+				return f, c.ArgErr()
 			}
 			netRange := c.Val()
 			if netRange == "*" || netRange == "ANY" {
@@ -90,18 +103,13 @@ func setup(c *caddy.Controller) error {
 			}
 			_, rule.source, err = net.ParseCIDR(netRange)
 			if err != nil {
-				return c.Errf("Illegal CIDR notation '%s'", c.Val())
+				return f, c.Errf("Illegal CIDR notation '%s'", c.Val())
 			}
 
 			f.Rules = append(f.Rules, rule)
 		}
 	}
-
-	dnsserver.GetConfig(c).AddPlugin(func(next plugin.Handler) plugin.Handler {
-		f.Next = next
-		return f
-	})
-	return nil
+	return f, nil
 }
 
 // TODO: dns.Type == QType? (@ihac)
