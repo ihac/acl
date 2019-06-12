@@ -30,6 +30,7 @@ before_install:
   - env
 
 script:
+  - go test -race -coverprofile=coverage.txt -covermode=atomic ./...
   - cd ../../ && mkdir coredns
   - git clone --depth=1 --branch=master https://github.com/coredns/coredns.git coredns/coredns
   - cd coredns/coredns
@@ -38,6 +39,7 @@ script:
   - sed -i '/^on:.*/i firewall:github.com/ihac/firewall/firewall' plugin.cfg
   - cat plugin.cfg
   - make
+
 
 after_success:
   - bash <(curl -s https://codecov.io/bash)
