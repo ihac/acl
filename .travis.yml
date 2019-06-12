@@ -34,10 +34,7 @@ script:
   - cd ../../ && mkdir coredns
   - git clone --depth=1 --branch=master https://github.com/coredns/coredns.git coredns/coredns
   - cd coredns/coredns
-  - pwd
-  - ls
   - sed -i '/^on:.*/i firewall:github.com/ihac/firewall/firewall' plugin.cfg
-  - cat plugin.cfg
   - make
 
 
