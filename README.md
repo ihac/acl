@@ -1,5 +1,6 @@
 # firewall
 [![Build Status](https://travis-ci.com/ihac/firewall.svg?branch=master)](https://travis-ci.com/ihac/firewall)
+[![codecov](https://codecov.io/gh/ihac/firewall/branch/master/graph/badge.svg)](https://codecov.io/gh/ihac/firewall)
 
 *firewall* is a CoreDNS plugin which performs as a firewall and prevents unauthorized access to protected servers.
 
