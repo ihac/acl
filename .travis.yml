@@ -8,14 +8,15 @@ cache:
   directories:
     - $GOPATH/pkg/mod
 
-go_import_path: github.com/coredns/coredns
-
 git:
   depth: 1
 
 branches:
   only:
   - master
+
+env:
+  - GO111MODULE=on
 
 # In the Travis VM-based build environment, IPv6 networking is not
 # enabled by default. The sysctl operations below enable IPv6.
@@ -29,10 +30,12 @@ before_install:
   - env
 
 script:
-  - cd $GOPATH/src/github.com/coredns/coredns
-  - sed -i '/on:/i \
-      firewall:github.com/ihac/firewall/firewall \
-      ' plugin.cfg
+  - cd ../../ && mkdir coredns
+  - git clone --depth=1 --branch=master https://github.com/coredns/coredns.git coredns/coredns
+  - cd coredns/coredns
+  - pwd
+  - ls
+  - sed -i '/^on:.*/i firewall:github.com/ihac/firewall/firewall' plugin.cfg
   - cat plugin.cfg
   - make
 
