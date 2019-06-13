@@ -137,6 +137,36 @@ func Test_firewall_ServeDNS(t *testing.T) {
 			dns.RcodeSuccess,
 			false,
 		},
+		{
+			"Whitelist 1 ALLOWED",
+			caddy.NewTestController("dns", `
+			firewall example.org {
+				allow type ANY from 192.168.0.0/16
+				block type ANY from ANY
+			}`),
+			args{
+				"www.example.org.",
+				"192.168.0.2",
+				dns.TypeA,
+			},
+			dns.RcodeSuccess,
+			false,
+		},
+		{
+			"Whitelist 1 REFUSED",
+			caddy.NewTestController("dns", `
+			firewall example.org {
+				allow type ANY from 192.168.0.0/16
+				block type ANY from ANY
+			}`),
+			args{
+				"www.example.org.",
+				"10.1.0.2",
+				dns.TypeA,
+			},
+			dns.RcodeRefused,
+			false,
+		},
 		// TODO: Add more test cases. (@ihac)
 	}
 
