@@ -54,6 +54,14 @@ func (t *testResponseWriter) TsigTimersOnly(bool) { return }
 // Hijack implement dns.ResponseWriter interface.
 func (t *testResponseWriter) Hijack() { return }
 
+func NewTestControllerWithZones(serverType, input string, zones []string) *caddy.Controller {
+	ctr := caddy.NewTestController(serverType, input)
+	for _, zone := range zones {
+		ctr.ServerBlockKeys = append(ctr.ServerBlockKeys, zone)
+	}
+	return ctr
+}
+
 func Test_firewall_ServeDNS(t *testing.T) {
 	type args struct {
 		domain   string
@@ -165,6 +173,62 @@ func Test_firewall_ServeDNS(t *testing.T) {
 				dns.TypeA,
 			},
 			dns.RcodeRefused,
+			false,
+		},
+		{
+			"Fine-Grained 1 REFUSED",
+			NewTestControllerWithZones("dns", `
+			firewall a.example.org {
+				block type ANY from 192.168.1.0/24
+			}`, []string{"example.org"}),
+			args{
+				"a.example.org.",
+				"192.168.1.2",
+				dns.TypeA,
+			},
+			dns.RcodeRefused,
+			false,
+		},
+		{
+			"Fine-Grained 1 ALLOWED",
+			NewTestControllerWithZones("dns", `
+			firewall a.example.org {
+				block type ANY from 192.168.1.0/24
+			}`, []string{"example.org"}),
+			args{
+				"www.example.org.",
+				"192.168.1.2",
+				dns.TypeA,
+			},
+			dns.RcodeSuccess,
+			false,
+		},
+		{
+			"Fine-Grained 2 REFUSED",
+			NewTestControllerWithZones("dns", `
+			firewall {
+				block type ANY from 192.168.1.0/24
+			}`, []string{"example.org"}),
+			args{
+				"a.example.org.",
+				"192.168.1.2",
+				dns.TypeA,
+			},
+			dns.RcodeRefused,
+			false,
+		},
+		{
+			"Fine-Grained 2 ALLOWED",
+			NewTestControllerWithZones("dns", `
+			firewall {
+				block type ANY from 192.168.1.0/24
+			}`, []string{"example.org"}),
+			args{
+				"a.example.com.",
+				"192.168.1.2",
+				dns.TypeA,
+			},
+			dns.RcodeSuccess,
 			false,
 		},
 		// TODO: Add more test cases. (@ihac)
