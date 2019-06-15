@@ -231,6 +231,41 @@ func Test_firewall_ServeDNS(t *testing.T) {
 			dns.RcodeSuccess,
 			false,
 		},
+		{
+			"Fine-Grained 2 REFUSED",
+			NewTestControllerWithZones("dns", `
+			firewall a.example.org {
+				block type ANY from 192.168.1.0/24
+			}
+			firewall b.example.org {
+				block type ANY from 192.168.2.0/24
+			}`, []string{"example.org"}),
+			args{
+				"b.example.org.",
+				"192.168.2.2",
+				dns.TypeA,
+			},
+			dns.RcodeRefused,
+			false,
+		},
+		{
+			"Fine-Grained 2 ALLOWED",
+			NewTestControllerWithZones("dns", `
+			firewall a.example.org {
+				block type ANY from 192.168.1.0/24
+			}
+			file a.txt
+			firewall b.example.org {
+				block type ANY from 192.168.2.0/24
+			}`, []string{"example.org"}),
+			args{
+				"b.example.org.",
+				"192.168.1.2",
+				dns.TypeA,
+			},
+			dns.RcodeSuccess,
+			false,
+		},
 		// TODO: Add more test cases. (@ihac)
 	}
 
