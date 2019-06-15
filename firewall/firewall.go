@@ -14,13 +14,19 @@ type firewall struct {
 	Next plugin.Handler
 
 	Rules []Rule
-	Zones []string
 }
 
-// Rule defines the ACL policy for DNS queries.
-// A rule performs the specified action (block/allow) on all DNS queries
-// matched by source IP or QTYPE.
+// Rule defines a list of Zones and some ACL policies which will be
+// enforced on them.
 type Rule struct {
+	Zones    []string
+	Policies []Policy
+}
+
+// Policy defines the ACL policy for DNS queries.
+// A policy performs the specified action (block/allow) on all DNS queries
+// matched by source IP or QTYPE.
+type Policy struct {
 	action string
 	qtype  dns.Type
 	source *net.IPNet
@@ -35,51 +41,56 @@ const (
 
 func (f firewall) ServeDNS(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) (int, error) {
 	state := request.Request{W: w, Req: r}
-	// check zone
-	zone := plugin.Zones(f.Zones).Matches(state.Name())
-	if zone == "" {
-		return plugin.NextOrFailure(state.Name(), f.Next, ctx, w, r)
+	for _, rule := range f.Rules {
+		// check zone
+		zone := plugin.Zones(rule.Zones).Matches(state.Name())
+		if zone == "" {
+			continue
+		}
+		isBlocked, err := shouldBlock(rule.Policies, w, r)
+		if err != nil {
+			return dns.RcodeRefused, err
+		}
+		if isBlocked {
+			m := new(dns.Msg)
+			m.SetRcode(r, dns.RcodeRefused)
+			w.WriteMsg(m)
+			// TODO: should we return Success here? (@ihac)
+			return dns.RcodeSuccess, nil
+		}
 	}
+	return plugin.NextOrFailure(state.Name(), f.Next, ctx, w, r)
+}
+
+func shouldBlock(policies []Policy, w dns.ResponseWriter, r *dns.Msg) (bool, error) {
+	state := request.Request{W: w, Req: r}
 
 	ip := net.ParseIP(state.IP())
 	if ip == nil {
-		return dns.RcodeRefused, fmt.Errorf("Illegal source ip '%s'", state.IP())
+		return true, fmt.Errorf("Illegal source ip '%s'", state.IP())
 	}
+
 	if len(r.Question) != 1 {
 		// TODO: what if #question == 0 or > 1? (@ihac)
-		return plugin.NextOrFailure(state.Name(), f.Next, ctx, w, r)
+		return false, nil
 	}
 	qtype := r.Question[0].Qtype
-
-	isBlocked := false
-	for _, rule := range f.Rules {
-		if !rule.source.Contains(ip) {
+	for _, policy := range policies {
+		if !policy.source.Contains(ip) {
 			continue
 		}
-		if dns.Type(qtype) != rule.qtype && rule.qtype != QtypeAll {
+		if dns.Type(qtype) != policy.qtype && policy.qtype != QtypeAll {
 			continue
 		}
-
 		// matched.
-		switch rule.action {
+		switch policy.action {
 		case ALLOW:
-			goto Resp
+			return false, nil
 		case BLOCK:
-			isBlocked = true
-			goto Resp
+			return true, nil
 		}
 	}
-
-Resp:
-	if isBlocked {
-		m := new(dns.Msg)
-		m.SetRcode(r, dns.RcodeRefused)
-		w.WriteMsg(m)
-		// TODO: should we return Success here? (@ihac)
-		return dns.RcodeSuccess, nil
-	}
-	// allow to recurse.
-	return plugin.NextOrFailure(state.Name(), f.Next, ctx, w, r)
+	return false, nil
 }
 
 func (f firewall) Name() string {

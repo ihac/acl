@@ -49,25 +49,27 @@ func parseFirewall(c *caddy.Controller) (firewall, error) {
 	 * ACTION: allow|block
 	 */
 	for c.Next() {
+		r := Rule{}
 		// load <ZONES...>.
-		f.Zones = c.RemainingArgs()
-		if len(f.Zones) == 0 {
+		// load <ZONES...>.
+		r.Zones = c.RemainingArgs()
+		if len(r.Zones) == 0 {
 			// if empty, the zones from the configuration block are used.
-			f.Zones = make([]string, len(c.ServerBlockKeys))
-			copy(f.Zones, c.ServerBlockKeys)
+			r.Zones = make([]string, len(c.ServerBlockKeys))
+			copy(r.Zones, c.ServerBlockKeys)
 		}
 		// strip port and transport.
-		for i := range f.Zones {
-			f.Zones[i] = plugin.Host(f.Zones[i]).Normalize()
+		for i := range r.Zones {
+			r.Zones[i] = plugin.Host(r.Zones[i]).Normalize()
 		}
 
 		var err error
 		// load all tokens in this block.
 		for c.NextBlock() {
-			rule := Rule{}
+			p := Policy{}
 			// ACTION type QTYPE from SOURCE
-			rule.action = strings.ToLower(c.Val())
-			if rule.action != ALLOW && rule.action != BLOCK {
+			p.action = strings.ToLower(c.Val())
+			if p.action != ALLOW && p.action != BLOCK {
 				return f, c.Errf("Unexpected token '%s'; expect '%s' or '%s'", c.Val(), ALLOW, BLOCK)
 			}
 
@@ -82,7 +84,7 @@ func parseFirewall(c *caddy.Controller) (firewall, error) {
 			if !c.NextArg() {
 				return f, c.ArgErr()
 			}
-			rule.qtype, err = parseQype(c.Val())
+			p.qtype, err = parseQype(c.Val())
 			if err != nil {
 				return f, err
 			}
@@ -101,13 +103,14 @@ func parseFirewall(c *caddy.Controller) (firewall, error) {
 			if netRange == "*" || netRange == "ANY" {
 				netRange = "0.0.0.0/0"
 			}
-			_, rule.source, err = net.ParseCIDR(netRange)
+			_, p.source, err = net.ParseCIDR(netRange)
 			if err != nil {
 				return f, c.Errf("Illegal CIDR notation '%s'", c.Val())
 			}
 
-			f.Rules = append(f.Rules, rule)
+			r.Policies = append(r.Policies, p)
 		}
+		f.Rules = append(f.Rules, r)
 	}
 	return f, nil
 }
