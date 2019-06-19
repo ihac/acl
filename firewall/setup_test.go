@@ -108,6 +108,15 @@ func Test_setup(t *testing.T) {
 			false,
 		},
 		{
+			"Local file 1",
+			caddy.NewTestController("dns", `
+			firewall {
+				block type A file nets_test.txt
+			}
+			`),
+			false,
+		},
+		{
 			"Missing argument 1",
 			caddy.NewTestController("dns", `
 			firewall {

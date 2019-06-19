@@ -1,8 +1,11 @@
 package firewall
 
 import (
+	"bufio"
 	"fmt"
+	"io"
 	"net"
+	"os"
 	"strings"
 
 	"github.com/coredns/coredns/core/dnsserver"
@@ -98,30 +101,25 @@ func parseFirewall(c *caddy.Controller) (firewall, error) {
 			if !c.NextArg() {
 				return f, c.ArgErr()
 			}
-			if strings.ToLower(c.Val()) != "net" {
+
+			var rawNetRanges []string
+			sourceType := strings.ToLower(c.Val())
+			if sourceType == "net" {
+				rawNetRanges = preprocessNetworks(c.RemainingArgs())
+			} else if sourceType == "file" {
+				if !c.NextArg() {
+					return f, c.ArgErr()
+				}
+				rawNetRanges, err = loadNetworksFromLocalFile(c.Val())
+				if err != nil {
+					return f, c.Errf("Unable to load networks from local file: %v", err)
+				}
+			} else {
 				return f, c.Errf("Unexpected token '%s'; expect 'net'", c.Val())
 			}
 
-			rawArgs := c.RemainingArgs()
-			var rawNetRanges []string
-			for _, arg := range rawArgs {
-				switch arg {
-				case "PRIVATE":
-					for _, pn := range PrivateNets {
-						rawNetRanges = append(rawNetRanges, pn)
-					}
-				case "*":
-					fallthrough
-				case "ANY":
-					rawNetRanges = []string{"0.0.0.0/0"}
-					break
-				default:
-					rawNetRanges = append(rawNetRanges, arg)
-				}
-			}
-
 			if len(rawNetRanges) == 0 {
-				return f, c.ArgErr()
+				return f, c.Errf("no network is specified")
 			}
 			for _, rawNet := range rawNetRanges {
 				_, source, err := net.ParseCIDR(rawNet)
@@ -135,6 +133,50 @@ func parseFirewall(c *caddy.Controller) (firewall, error) {
 		f.Rules = append(f.Rules, r)
 	}
 	return f, nil
+}
+
+func preprocessNetworks(rawNets []string) []string {
+	var nets []string
+	for _, rawNet := range rawNets {
+		switch rawNet {
+		case "PRIVATE":
+			for _, pn := range PrivateNets {
+				nets = append(nets, pn)
+			}
+		case "*":
+			fallthrough
+		case "ANY":
+			return []string{"0.0.0.0/0"}
+		default:
+			nets = append(nets, rawNet)
+		}
+
+	}
+	return nets
+}
+
+func loadNetworksFromLocalFile(fileName string) ([]string, error) {
+	var nets []string
+	file, err := os.Open(fileName)
+	defer file.Close()
+	if err != nil {
+		return nil, err
+	}
+	reader := bufio.NewReader(file)
+	var line string
+	for {
+		line, err = reader.ReadString('\n')
+		if err != nil {
+			break
+		}
+		// Remove newline.
+		nets = append(nets, line[:len(line)-1])
+	}
+	// err should be EOF.
+	if err != nil && err != io.EOF {
+		return nil, err
+	}
+	return nets, nil
 }
 
 // TODO: dns.Type == QType? (@ihac)

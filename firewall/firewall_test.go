@@ -279,7 +279,34 @@ func Test_firewall_ServeDNS(t *testing.T) {
 			dns.RcodeRefused,
 			false,
 		},
-
+		{
+			"Local file 1 Blocked",
+			caddy.NewTestController("dns", `
+			firewall example.com {
+				block type ANY file nets_test.txt 
+			}`),
+			args{
+				"a.example.com.",
+				"192.168.1.2",
+				dns.TypeA,
+			},
+			dns.RcodeRefused,
+			false,
+		},
+		{
+			"Local file 1 Allowed",
+			caddy.NewTestController("dns", `
+			firewall example.com {
+				block type ANY file nets_test.txt 
+			}`),
+			args{
+				"a.example.com.",
+				"192.168.3.1",
+				dns.TypeA,
+			},
+			dns.RcodeSuccess,
+			false,
+		},
 		// TODO: Add more test cases. (@ihac)
 	}
 
