@@ -6,6 +6,7 @@ import (
 	"net"
 
 	"github.com/coredns/coredns/plugin"
+	"github.com/coredns/coredns/plugin/metrics"
 	"github.com/coredns/coredns/request"
 	"github.com/miekg/dns"
 )
@@ -55,10 +56,12 @@ func (f firewall) ServeDNS(ctx context.Context, w dns.ResponseWriter, r *dns.Msg
 			m := new(dns.Msg)
 			m.SetRcode(r, dns.RcodeRefused)
 			w.WriteMsg(m)
+			RequestBlockCount.WithLabelValues(metrics.WithServer(ctx), zone).Inc()
 			// TODO: should we return Success here? (@ihac)
 			return dns.RcodeSuccess, nil
 		}
 	}
+	RequestAllowCount.WithLabelValues(metrics.WithServer(ctx)).Inc()
 	return plugin.NextOrFailure(state.Name(), f.Next, ctx, w, r)
 }
 

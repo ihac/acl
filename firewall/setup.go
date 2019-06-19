@@ -10,7 +10,7 @@ import (
 
 	"github.com/coredns/coredns/core/dnsserver"
 	"github.com/coredns/coredns/plugin"
-
+	"github.com/coredns/coredns/plugin/metrics"
 	"github.com/mholt/caddy"
 	"github.com/miekg/dns"
 )
@@ -43,6 +43,12 @@ func setup(c *caddy.Controller) error {
 	dnsserver.GetConfig(c).AddPlugin(func(next plugin.Handler) plugin.Handler {
 		f.Next = next
 		return f
+	})
+
+	// Register all metrics.
+	c.OnStartup(func() error {
+		metrics.MustRegister(c, RequestBlockCount, RequestAllowCount)
+		return nil
 	})
 	return nil
 }
