@@ -27,8 +27,8 @@ type Rule struct {
 // A policy performs the specified action (block/allow) on all DNS queries
 // matched by source IP or QTYPE.
 type Policy struct {
-	action string
-	qtype  dns.Type
+	action  string
+	qtype   dns.Type
 	sources []*net.IPNet
 }
 

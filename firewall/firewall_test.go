@@ -254,7 +254,6 @@ func Test_firewall_ServeDNS(t *testing.T) {
 			firewall a.example.org {
 				block type ANY net 192.168.1.0/24
 			}
-			file a.txt
 			firewall b.example.org {
 				block type ANY net 192.168.2.0/24
 			}`, []string{"example.org"}),
@@ -266,6 +265,21 @@ func Test_firewall_ServeDNS(t *testing.T) {
 			dns.RcodeSuccess,
 			false,
 		},
+		{
+			"Keyword PRIVATE 1 Blocked",
+			caddy.NewTestController("dns", `
+			firewall example.com {
+				block type ANY net PRIVATE
+			}`),
+			args{
+				"a.example.com.",
+				"172.16.0.2",
+				dns.TypeA,
+			},
+			dns.RcodeRefused,
+			false,
+		},
+
 		// TODO: Add more test cases. (@ihac)
 	}
 

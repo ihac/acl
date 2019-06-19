@@ -81,6 +81,33 @@ func Test_setup(t *testing.T) {
 			false,
 		},
 		{
+			"multiple-networks 1",
+			caddy.NewTestController("dns", `
+			firewall example.org {
+				block type ANY net 192.168.1.0/24 192.168.3.0/24
+			}
+			`),
+			false,
+		},
+		{
+			"multiple-networks 2",
+			caddy.NewTestController("dns", `
+			firewall example.org {
+				block type ANY net 192.168.3.0/24
+			}
+			`),
+			false,
+		},
+		{
+			"Keyword PRIVATE 1",
+			caddy.NewTestController("dns", `
+			firewall example.org {
+				block type ANY net PRIVATE
+			}
+			`),
+			false,
+		},
+		{
 			"Missing argument 1",
 			caddy.NewTestController("dns", `
 			firewall {

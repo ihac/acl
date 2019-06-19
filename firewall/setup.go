@@ -18,6 +18,12 @@ const (
 	QtypeAll dns.Type = 260
 )
 
+var (
+	// PrivateNets defines all ip addresses reserved for private networks.
+	// i.e., 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16.
+	PrivateNets = []string{"10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"}
+)
+
 func init() {
 	caddy.RegisterPlugin("firewall", caddy.Plugin{
 		ServerType: "dns",
@@ -100,6 +106,10 @@ func parseFirewall(c *caddy.Controller) (firewall, error) {
 			var rawNetRanges []string
 			for _, arg := range rawArgs {
 				switch arg {
+				case "PRIVATE":
+					for _, pn := range PrivateNets {
+						rawNetRanges = append(rawNetRanges, pn)
+					}
 				case "*":
 					fallthrough
 				case "ANY":
