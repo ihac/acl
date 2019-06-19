@@ -79,7 +79,7 @@ func Test_firewall_ServeDNS(t *testing.T) {
 			"Blacklist 1 BLOCKED",
 			caddy.NewTestController("dns", `
 			firewall example.org {
-				block type A from 192.168.0.0/16
+				block type A net 192.168.0.0/16
 			}`),
 			args{
 				"www.example.org.",
@@ -93,7 +93,7 @@ func Test_firewall_ServeDNS(t *testing.T) {
 			"Blacklist 1 ALLOWED",
 			caddy.NewTestController("dns", `
 			firewall example.org {
-				block type A from 192.168.0.0/16
+				block type A net 192.168.0.0/16
 			}`),
 			args{
 				"www.example.org.",
@@ -107,7 +107,7 @@ func Test_firewall_ServeDNS(t *testing.T) {
 			"Blacklist 2 BLOCKED",
 			caddy.NewTestController("dns", `
 			firewall example.org {
-				block type ANY from 192.168.0.0/16
+				block type ANY net 192.168.0.0/16
 			}`),
 			args{
 				"www.example.org.",
@@ -121,7 +121,7 @@ func Test_firewall_ServeDNS(t *testing.T) {
 			"Blacklist 3 BLOCKED",
 			caddy.NewTestController("dns", `
 			firewall example.org {
-				block type A from ANY
+				block type A net ANY
 			}`),
 			args{
 				"www.example.org.",
@@ -135,7 +135,7 @@ func Test_firewall_ServeDNS(t *testing.T) {
 			"Blacklist 3 ALLOWED",
 			caddy.NewTestController("dns", `
 			firewall example.org {
-				block type A from ANY
+				block type A net ANY
 			}`),
 			args{
 				"www.example.org.",
@@ -149,8 +149,8 @@ func Test_firewall_ServeDNS(t *testing.T) {
 			"Whitelist 1 ALLOWED",
 			caddy.NewTestController("dns", `
 			firewall example.org {
-				allow type ANY from 192.168.0.0/16
-				block type ANY from ANY
+				allow type ANY net 192.168.0.0/16
+				block type ANY net ANY
 			}`),
 			args{
 				"www.example.org.",
@@ -164,8 +164,8 @@ func Test_firewall_ServeDNS(t *testing.T) {
 			"Whitelist 1 REFUSED",
 			caddy.NewTestController("dns", `
 			firewall example.org {
-				allow type ANY from 192.168.0.0/16
-				block type ANY from ANY
+				allow type ANY net 192.168.0.0/16
+				block type ANY net ANY
 			}`),
 			args{
 				"www.example.org.",
@@ -179,7 +179,7 @@ func Test_firewall_ServeDNS(t *testing.T) {
 			"Fine-Grained 1 REFUSED",
 			NewTestControllerWithZones("dns", `
 			firewall a.example.org {
-				block type ANY from 192.168.1.0/24
+				block type ANY net 192.168.1.0/24
 			}`, []string{"example.org"}),
 			args{
 				"a.example.org.",
@@ -193,7 +193,7 @@ func Test_firewall_ServeDNS(t *testing.T) {
 			"Fine-Grained 1 ALLOWED",
 			NewTestControllerWithZones("dns", `
 			firewall a.example.org {
-				block type ANY from 192.168.1.0/24
+				block type ANY net 192.168.1.0/24
 			}`, []string{"example.org"}),
 			args{
 				"www.example.org.",
@@ -207,7 +207,7 @@ func Test_firewall_ServeDNS(t *testing.T) {
 			"Fine-Grained 2 REFUSED",
 			NewTestControllerWithZones("dns", `
 			firewall {
-				block type ANY from 192.168.1.0/24
+				block type ANY net 192.168.1.0/24
 			}`, []string{"example.org"}),
 			args{
 				"a.example.org.",
@@ -221,7 +221,7 @@ func Test_firewall_ServeDNS(t *testing.T) {
 			"Fine-Grained 2 ALLOWED",
 			NewTestControllerWithZones("dns", `
 			firewall {
-				block type ANY from 192.168.1.0/24
+				block type ANY net 192.168.1.0/24
 			}`, []string{"example.org"}),
 			args{
 				"a.example.com.",
@@ -235,10 +235,10 @@ func Test_firewall_ServeDNS(t *testing.T) {
 			"Fine-Grained 2 REFUSED",
 			NewTestControllerWithZones("dns", `
 			firewall a.example.org {
-				block type ANY from 192.168.1.0/24
+				block type ANY net 192.168.1.0/24
 			}
 			firewall b.example.org {
-				block type ANY from 192.168.2.0/24
+				block type ANY net 192.168.2.0/24
 			}`, []string{"example.org"}),
 			args{
 				"b.example.org.",
@@ -252,11 +252,11 @@ func Test_firewall_ServeDNS(t *testing.T) {
 			"Fine-Grained 2 ALLOWED",
 			NewTestControllerWithZones("dns", `
 			firewall a.example.org {
-				block type ANY from 192.168.1.0/24
+				block type ANY net 192.168.1.0/24
 			}
 			file a.txt
 			firewall b.example.org {
-				block type ANY from 192.168.2.0/24
+				block type ANY net 192.168.2.0/24
 			}`, []string{"example.org"}),
 			args{
 				"b.example.org.",
