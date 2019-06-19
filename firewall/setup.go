@@ -96,18 +96,30 @@ func parseFirewall(c *caddy.Controller) (firewall, error) {
 				return f, c.Errf("Unexpected token '%s'; expect 'net'", c.Val())
 			}
 
-			if !c.NextArg() {
-				return f, c.ArgErr()
-			}
-			netRange := c.Val()
-			if netRange == "*" || netRange == "ANY" {
-				netRange = "0.0.0.0/0"
-			}
-			_, p.source, err = net.ParseCIDR(netRange)
-			if err != nil {
-				return f, c.Errf("Illegal CIDR notation '%s'", c.Val())
+			rawArgs := c.RemainingArgs()
+			var rawNetRanges []string
+			for _, arg := range rawArgs {
+				switch arg {
+				case "*":
+					fallthrough
+				case "ANY":
+					rawNetRanges = []string{"0.0.0.0/0"}
+					break
+				default:
+					rawNetRanges = append(rawNetRanges, arg)
+				}
 			}
 
+			if len(rawNetRanges) == 0 {
+				return f, c.ArgErr()
+			}
+			for _, rawNet := range rawNetRanges {
+				_, source, err := net.ParseCIDR(rawNet)
+				if err != nil {
+					return f, c.Errf("Illegal CIDR notation '%s'", c.Val())
+				}
+				p.sources = append(p.sources, source)
+			}
 			r.Policies = append(r.Policies, p)
 		}
 		f.Rules = append(f.Rules, r)

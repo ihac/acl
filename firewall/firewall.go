@@ -29,7 +29,7 @@ type Rule struct {
 type Policy struct {
 	action string
 	qtype  dns.Type
-	source *net.IPNet
+	sources []*net.IPNet
 }
 
 const (
@@ -76,9 +76,17 @@ func shouldBlock(policies []Policy, w dns.ResponseWriter, r *dns.Msg) (bool, err
 	}
 	qtype := r.Question[0].Qtype
 	for _, policy := range policies {
-		if !policy.source.Contains(ip) {
+		contained := false
+		for _, source := range policy.sources {
+			if source.Contains(ip) {
+				contained = true
+				break
+			}
+		}
+		if !contained {
 			continue
 		}
+
 		if dns.Type(qtype) != policy.qtype && policy.qtype != QtypeAll {
 			continue
 		}
