@@ -42,7 +42,7 @@ func parseFirewall(c *caddy.Controller) (firewall, error) {
 	f := firewall{}
 	/*
 	 * firewall [ZONES...] {
-	 *   ACTION type QTYPE from SOURCE
+	 *   ACTION type QTYPE net SOURCE
 	 *   ...
 	 * }
 	 *
@@ -67,7 +67,7 @@ func parseFirewall(c *caddy.Controller) (firewall, error) {
 		// load all tokens in this block.
 		for c.NextBlock() {
 			p := Policy{}
-			// ACTION type QTYPE from SOURCE
+			// ACTION type QTYPE net SOURCE
 			p.action = strings.ToLower(c.Val())
 			if p.action != ALLOW && p.action != BLOCK {
 				return f, c.Errf("Unexpected token '%s'; expect '%s' or '%s'", c.Val(), ALLOW, BLOCK)
@@ -92,8 +92,8 @@ func parseFirewall(c *caddy.Controller) (firewall, error) {
 			if !c.NextArg() {
 				return f, c.ArgErr()
 			}
-			if strings.ToLower(c.Val()) != "from" {
-				return f, c.Errf("Unexpected token '%s'; expect 'from'", c.Val())
+			if strings.ToLower(c.Val()) != "net" {
+				return f, c.Errf("Unexpected token '%s'; expect 'net'", c.Val())
 			}
 
 			if !c.NextArg() {
