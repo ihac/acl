@@ -12,7 +12,7 @@ This plugin can be used multiple times per Server Block.
 
 ```
 firewall [ZONES…] {
-    ACTION type QTYPE from SOURCE
+    ACTION type QTYPE net SOURCE
     ...
 }
 ```
@@ -30,7 +30,7 @@ To demonstrate the use of plugin firewall, we provide some typical examples.
 ```
 . {
     firewall {
-        block type A from 192.168.0.0/16
+        block type A net 192.168.0.0/16
     }
 }
 ```
@@ -40,7 +40,7 @@ To demonstrate the use of plugin firewall, we provide some typical examples.
 ```
 . {
     firewall {
-        block type ANY from 192.168.0.0/16
+        block type ANY net 192.168.0.0/16
     }
 }
 ```
@@ -50,7 +50,7 @@ To demonstrate the use of plugin firewall, we provide some typical examples.
 ```
 . {
     firewall {
-        block type A from ANY
+        block type A net ANY
     }
 }
 ```
@@ -60,8 +60,8 @@ To demonstrate the use of plugin firewall, we provide some typical examples.
 ```
 . {
     firewall {
-        allow type ANY from 192.168.1.0/24
-        block type ANY from 192.168.0.0/16
+        allow type ANY net 192.168.1.0/24
+        block type ANY net 192.168.0.0/16
     }
 }
 ```
@@ -71,8 +71,8 @@ To demonstrate the use of plugin firewall, we provide some typical examples.
 ```
 . {
     firewall {
-        allow type ANY from 192.168.0.0/16
-        block type ANY from ANY
+        allow type ANY net 192.168.0.0/16
+        block type ANY net ANY
     }
 }
 ```
@@ -82,7 +82,7 @@ To demonstrate the use of plugin firewall, we provide some typical examples.
 ```
 example.org {
     firewall a.example.org {
-        block type ANY from 192.168.1.0/24
+        block type ANY net 192.168.1.0/24
     }
 }
 ```
@@ -92,10 +92,10 @@ example.org {
 ```
 example.org {
     firewall a.example.org {
-        block type ANY from 192.168.1.0/24
+        block type ANY net 192.168.1.0/24
     }
     firewall b.example.org {
-        block type ANY from 192.168.2.0/24
+        block type ANY net 192.168.2.0/24
     }
 }
 ```
