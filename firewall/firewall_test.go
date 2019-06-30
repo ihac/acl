@@ -280,10 +280,42 @@ func Test_firewall_ServeDNS(t *testing.T) {
 			false,
 		},
 		{
+			"Keyword LOCAL 1 Blocked",
+			caddy.NewTestController("dns", `
+			firewall example.com {
+				allow type ANY net LOCAL
+				block type ANY net ANY
+			}`),
+			args{
+				"a.example.com.",
+				// NOTE: this test case will only pass when 100.100.100.100 is not in your local network.
+				"100.100.100.100",
+				dns.TypeA,
+			},
+			dns.RcodeRefused,
+			false,
+		},
+		{
+			"Keyword LOCAL 1 Allowed",
+			caddy.NewTestController("dns", `
+			firewall example.com {
+				allow type ANY net LOCAL
+				block type ANY net ANY
+			}`),
+			args{
+				"a.example.com.",
+				// loopback net is 127.0.0.1/8, which should cover 127.16.0.2.
+				"127.16.0.2",
+				dns.TypeA,
+			},
+			dns.RcodeSuccess,
+			false,
+		},
+		{
 			"Local file 1 Blocked",
 			caddy.NewTestController("dns", `
 			firewall example.com {
-				block type ANY file nets_test.txt 
+				block type ANY file nets_test.txt
 			}`),
 			args{
 				"a.example.com.",
@@ -297,7 +329,7 @@ func Test_firewall_ServeDNS(t *testing.T) {
 			"Local file 1 Allowed",
 			caddy.NewTestController("dns", `
 			firewall example.com {
-				block type ANY file nets_test.txt 
+				block type ANY file nets_test.txt
 			}`),
 			args{
 				"a.example.com.",

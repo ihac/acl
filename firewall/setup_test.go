@@ -108,6 +108,16 @@ func Test_setup(t *testing.T) {
 			false,
 		},
 		{
+			"Keyword LOCAL 1",
+			caddy.NewTestController("dns", `
+			firewall example.org {
+				allow type ANY net LOCAL
+				block type ANY net ANY
+			}
+			`),
+			false,
+		},
+		{
 			"Local file 1",
 			caddy.NewTestController("dns", `
 			firewall {
