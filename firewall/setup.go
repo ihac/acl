@@ -11,6 +11,7 @@ import (
 	"github.com/coredns/coredns/core/dnsserver"
 	"github.com/coredns/coredns/plugin"
 	"github.com/coredns/coredns/plugin/metrics"
+	"github.com/coredns/coredns/plugin/pkg/log"
 	"github.com/mholt/caddy"
 	"github.com/miekg/dns"
 )
@@ -149,6 +150,28 @@ func preprocessNetworks(rawNets []string) []string {
 			for _, pn := range PrivateNets {
 				nets = append(nets, pn)
 			}
+		case "LOCAL":
+			intfs, err := net.Interfaces()
+			if err != nil {
+				log.Errorf("Failed to get all network interfaces: %v", err)
+				continue
+			}
+			for _, intf := range intfs {
+				addrs, err := intf.Addrs()
+				if err != nil {
+					log.Errorf("Failed to get addresses from interface %s: %v", intf.Name, err)
+					continue
+				}
+				for _, addr := range addrs {
+					n := addr.String()
+					// TODO: support IPv6. (@ihac)
+					// ":" should be enough to distinguish IPv4 and IPv6.
+					if strings.Contains(n, ":") {
+						continue
+					}
+					nets = append(nets, n)
+				}
+			}
 		case "*":
 			fallthrough
 		case "ANY":
@@ -158,6 +181,7 @@ func preprocessNetworks(rawNets []string) []string {
 		}
 
 	}
+	fmt.Printf("%+v\n", nets)
 	return nets
 }
 
