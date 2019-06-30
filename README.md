@@ -100,4 +100,25 @@ example.org {
 }
 ```
 
+[Preserved Identifier] Allow only DNS queries from private networks:
+```
+example.org {
+    allow type ANY net PRIVATE
+    block type ANY net ANY
+}
+```
 
+[Preserved Identifier] Allow only DNS queries from local network:
+```
+example.org {
+    allow type ANY net LOCAL
+    block type ANY net ALL
+}
+```
+
+[Local ACL] Block/Allow DNS queries based on ACLs from local file:
+```
+example.org {
+    block type ANY file /path/to/blacklist.txt
+}
+```
