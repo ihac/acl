@@ -181,7 +181,6 @@ func preprocessNetworks(rawNets []string) []string {
 		}
 
 	}
-	fmt.Printf("%+v\n", nets)
 	return nets
 }
 
