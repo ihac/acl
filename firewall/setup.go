@@ -131,7 +131,7 @@ func parseFirewall(c *caddy.Controller) (firewall, error) {
 			for _, rawNet := range rawNetRanges {
 				_, source, err := net.ParseCIDR(rawNet)
 				if err != nil {
-					return f, c.Errf("Illegal CIDR notation '%s'", c.Val())
+					return f, c.Errf("Illegal CIDR notation '%s'", rawNet)
 				}
 				p.sources = append(p.sources, source)
 			}
