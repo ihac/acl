@@ -1,12 +1,46 @@
 package firewall
 
 import (
+	"os"
 	"testing"
 
 	"github.com/mholt/caddy"
 )
 
+var (
+	localfiles = map[string]string{
+		"acl-example-1.txt": `10.218.128.0/24
+35.39.53.223/32
+43.105.127.35/18`,
+	}
+)
+
+func init() {
+	for k, v := range localfiles {
+		file, err := os.Create(k)
+		defer file.Close()
+		if err != nil {
+			panic(err)
+		}
+		_, err = file.Write([]byte(v))
+		if err != nil {
+			panic(err)
+		}
+	}
+}
+
+func cleanup() {
+	for k := range localfiles {
+		err := os.Remove(k)
+		if err != nil {
+			panic(err)
+		}
+	}
+}
+
 func Test_setup(t *testing.T) {
+	defer cleanup()
+
 	tests := []struct {
 		name    string
 		ctr     *caddy.Controller
@@ -121,7 +155,7 @@ func Test_setup(t *testing.T) {
 			"Local file 1",
 			caddy.NewTestController("dns", `
 			firewall {
-				block type A file nets_test.txt
+				block type A file acl-example-1.txt
 			}
 			`),
 			false,
