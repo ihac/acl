@@ -5,10 +5,15 @@ import (
 	"net"
 	"testing"
 
-	"github.com/coredns/coredns/plugin/test"
 	"github.com/caddyserver/caddy"
+	"github.com/coredns/coredns/plugin/test"
 	"github.com/miekg/dns"
 )
+
+var firewallTestFiles = map[string]string{
+	"acl-firewall-test-1.txt": `192.168.1.0/24
+`,
+}
 
 type testResponseWriter struct {
 	remoteIP net.Addr
@@ -63,6 +68,9 @@ func NewTestControllerWithZones(serverType, input string, zones []string) *caddy
 }
 
 func Test_firewall_ServeDNS(t *testing.T) {
+	envSetup(firewallTestFiles)
+	defer envCleanup(firewallTestFiles)
+
 	type args struct {
 		domain   string
 		sourceIP string
@@ -315,7 +323,7 @@ func Test_firewall_ServeDNS(t *testing.T) {
 			"Local file 1 Blocked",
 			caddy.NewTestController("dns", `
 			firewall example.com {
-				block type ANY file nets_test.txt
+				block type ANY file acl-firewall-test-1.txt
 			}`),
 			args{
 				"a.example.com.",
@@ -329,7 +337,7 @@ func Test_firewall_ServeDNS(t *testing.T) {
 			"Local file 1 Allowed",
 			caddy.NewTestController("dns", `
 			firewall example.com {
-				block type ANY file nets_test.txt
+				block type ANY file acl-firewall-test-1.txt
 			}`),
 			args{
 				"a.example.com.",

@@ -8,15 +8,16 @@ import (
 )
 
 var (
-	localfiles = map[string]string{
-		"acl-example-1.txt": `10.218.128.0/24
+	setupTestFiles = map[string]string{
+		"acl-setup-test-1.txt": `10.218.128.0/24
 35.39.53.223/32
-43.105.127.35/18`,
+43.105.127.35/18
+`,
 	}
 )
 
-func init() {
-	for k, v := range localfiles {
+func envSetup(files map[string]string) {
+	for k, v := range files {
 		file, err := os.Create(k)
 		defer file.Close()
 		if err != nil {
@@ -29,8 +30,8 @@ func init() {
 	}
 }
 
-func cleanup() {
-	for k := range localfiles {
+func envCleanup(files map[string]string) {
+	for k := range files {
 		err := os.Remove(k)
 		if err != nil {
 			panic(err)
@@ -39,7 +40,8 @@ func cleanup() {
 }
 
 func Test_setup(t *testing.T) {
-	defer cleanup()
+	envSetup(setupTestFiles)
+	defer envCleanup(setupTestFiles)
 
 	tests := []struct {
 		name    string
@@ -155,7 +157,7 @@ func Test_setup(t *testing.T) {
 			"Local file 1",
 			caddy.NewTestController("dns", `
 			firewall {
-				block type A file acl-example-1.txt
+				block type A file acl-setup-test-1.txt
 			}
 			`),
 			false,
