@@ -11,8 +11,7 @@ var (
 	setupTestFiles = map[string]string{
 		"acl-setup-test-1.txt": `10.218.128.0/24
 35.39.53.223/32
-43.105.127.35/18
-`,
+43.105.127.35/18`,
 	}
 )
 

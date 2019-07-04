@@ -11,8 +11,7 @@ import (
 )
 
 var firewallTestFiles = map[string]string{
-	"acl-firewall-test-1.txt": `192.168.1.0/24
-`,
+	"acl-firewall-test-1.txt": `192.168.1.0/24`,
 }
 
 type testResponseWriter struct {
