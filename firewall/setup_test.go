@@ -4,7 +4,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/mholt/caddy"
+	"github.com/caddyserver/caddy"
 )
 
 var (

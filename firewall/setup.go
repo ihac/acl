@@ -12,7 +12,7 @@ import (
 	"github.com/coredns/coredns/plugin"
 	"github.com/coredns/coredns/plugin/metrics"
 	"github.com/coredns/coredns/plugin/pkg/log"
-	"github.com/mholt/caddy"
+	"github.com/caddyserver/caddy"
 	"github.com/miekg/dns"
 )
 
