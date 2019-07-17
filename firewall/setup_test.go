@@ -263,3 +263,32 @@ func Test_stripComment(t *testing.T) {
 		})
 	}
 }
+
+func Test_normalize(t *testing.T) {
+	type args struct {
+		rawNet string
+	}
+	tests := []struct {
+		name string
+		args args
+		want string
+	}{
+		{
+			"Network range 1",
+			args{"10.218.10.8/24"},
+			"10.218.10.8/24",
+		},
+		{
+			"IP address 1",
+			args{"10.218.10.8"},
+			"10.218.10.8/32",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := normalize(tt.args.rawNet); got != tt.want {
+				t.Errorf("normalize() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

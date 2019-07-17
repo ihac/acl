@@ -129,6 +129,7 @@ func parseFirewall(c *caddy.Controller) (firewall, error) {
 				return f, c.Errf("no network is specified")
 			}
 			for _, rawNet := range rawNetRanges {
+				rawNet = normalize(rawNet)
 				_, source, err := net.ParseCIDR(rawNet)
 				if err != nil {
 					return f, c.Errf("Illegal CIDR notation '%s'", rawNet)
@@ -140,6 +141,13 @@ func parseFirewall(c *caddy.Controller) (firewall, error) {
 		f.Rules = append(f.Rules, r)
 	}
 	return f, nil
+}
+
+func normalize(rawNet string) string {
+	if idx := strings.IndexAny(rawNet, "/"); idx >= 0 {
+		return rawNet
+	}
+	return rawNet + "/32"
 }
 
 func preprocessNetworks(rawNets []string) []string {
