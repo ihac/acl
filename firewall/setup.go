@@ -201,8 +201,12 @@ func loadNetworksFromLocalFile(fileName string) ([]string, error) {
 	}
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
-		line := scanner.Text()
-		nets = append(nets, stripComment(line))
+		line := stripComment(scanner.Text())
+		// skip empty line.
+		if line == "" {
+			continue
+		}
+		nets = append(nets, line)
 	}
 	return nets, nil
 }
