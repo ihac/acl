@@ -224,3 +224,42 @@ func Test_setup(t *testing.T) {
 		})
 	}
 }
+
+func Test_stripComment(t *testing.T) {
+	type args struct {
+		line string
+	}
+	tests := []struct {
+		name string
+		args args
+		want string
+	}{
+		{
+			"No change 1",
+			args{`hello, world`},
+			`hello, world`,
+		},
+		{
+			"No comment 1",
+			args{`  hello, world   `},
+			`hello, world`,
+		},
+		{
+			"Remove tailing comment 1",
+			args{`hello, world# comments`},
+			`hello, world`,
+		},
+		{
+			"Remove tailing comment 2",
+			args{`  hello, world   # comments`},
+			`hello, world`,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := stripComment(tt.args.line); got != tt.want {
+				t.Errorf("stripComment() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

@@ -6,6 +6,7 @@ import (
 	"net"
 	"os"
 	"strings"
+	"unicode"
 
 	"github.com/caddyserver/caddy"
 	"github.com/coredns/coredns/core/dnsserver"
@@ -192,9 +193,19 @@ func loadNetworksFromLocalFile(fileName string) ([]string, error) {
 	}
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
-		nets = append(nets, scanner.Text())
+		line := scanner.Text()
+		nets = append(nets, stripComment(line))
 	}
 	return nets, nil
+}
+
+func stripComment(line string) string {
+	commentCh := "#"
+	if idx := strings.IndexAny(line, commentCh); idx >= 0 {
+		line = line[:idx]
+	}
+	line = strings.TrimLeftFunc(line, unicode.IsSpace)
+	return strings.TrimRightFunc(line, unicode.IsSpace)
 }
 
 // TODO: dns.Type == QType? (@ihac)
