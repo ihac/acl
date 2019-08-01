@@ -210,7 +210,7 @@ Cons:
 - Pool performance.
 - Order of ACL policy might confuse users and act not as expected.
 
-![](/Users/luffy_xiao/Downloads/firewall.png)
+![](./images/data_flow.png)
 
 
 
