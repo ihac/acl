@@ -1,9 +1,9 @@
 package filter
 
 import (
-	"fmt"
 	"net"
 
+	"github.com/coredns/coredns/plugin/pkg/log"
 	cuckoo "github.com/seiflotfy/cuckoofilter"
 )
 
@@ -21,7 +21,7 @@ func (cf *cuckooFilter) Add(subnet net.IPNet) error {
 		ip := subnet.IP.To4()
 		ok := cf.Filter.InsertUnique(ip)
 		if !ok {
-			return fmt.Errorf("Failed to insert ip '%s' to filter", ip)
+			log.Warningf("Failed to insert IP '%s' to filter", ip)
 		}
 	} else {
 		cf.subnets = append(cf.subnets, subnet)
