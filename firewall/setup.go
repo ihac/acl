@@ -14,6 +14,7 @@ import (
 	"github.com/coredns/coredns/plugin/metrics"
 	"github.com/coredns/coredns/plugin/pkg/log"
 	"github.com/miekg/dns"
+	"github.com/ihac/firewall/firewall/filter"
 )
 
 const (
@@ -128,13 +129,18 @@ func parseFirewall(c *caddy.Controller) (firewall, error) {
 			if len(rawNetRanges) == 0 {
 				return f, c.Errf("no network is specified")
 			}
+			var sources []net.IPNet
 			for _, rawNet := range rawNetRanges {
 				rawNet = normalize(rawNet)
 				_, source, err := net.ParseCIDR(rawNet)
 				if err != nil {
 					return f, c.Errf("Illegal CIDR notation '%s'", rawNet)
 				}
-				p.sources = append(p.sources, source)
+				sources = append(sources, *source)
+			}
+			p.filter, err = filter.New("naive", sources)
+			if err != nil {
+				return f, c.Errf("Unable to initialize filter: %v", err)
 			}
 			r.Policies = append(r.Policies, p)
 		}

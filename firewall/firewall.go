@@ -9,6 +9,7 @@ import (
 	"github.com/coredns/coredns/plugin/metrics"
 	"github.com/coredns/coredns/request"
 	"github.com/miekg/dns"
+	"github.com/ihac/firewall/firewall/filter"
 )
 
 type firewall struct {
@@ -30,7 +31,7 @@ type Rule struct {
 type Policy struct {
 	action  string
 	qtype   dns.Type
-	sources []*net.IPNet
+	filter  filter.Filter
 }
 
 const (
@@ -79,14 +80,7 @@ func shouldBlock(policies []Policy, w dns.ResponseWriter, r *dns.Msg) (bool, err
 	}
 	qtype := r.Question[0].Qtype
 	for _, policy := range policies {
-		contained := false
-		for _, source := range policy.sources {
-			if source.Contains(ip) {
-				contained = true
-				break
-			}
-		}
-		if !contained {
+		if !policy.filter.Contains(ip) {
 			continue
 		}
 
