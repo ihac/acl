@@ -1,8 +1,8 @@
 package filter
 
 import (
-	"net"
 	"fmt"
+	"net"
 )
 
 // Filter allows to whether an IP address is present in
@@ -12,6 +12,7 @@ type Filter interface {
 	Contains(net.IP) bool
 }
 
+// New creates a Filter.
 func New(filterType string, subnets []net.IPNet) (Filter, error) {
 	switch filterType {
 	case "naive":

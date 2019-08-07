@@ -153,6 +153,34 @@ func Test_firewall_ServeDNS(t *testing.T) {
 			false,
 		},
 		{
+			"Blacklist 4 Single IP BLOCKED",
+			caddy.NewTestController("dns", `
+			firewall example.org {
+				block type A net 192.168.1.2
+			}`),
+			args{
+				"www.example.org.",
+				"192.168.1.2",
+				dns.TypeA,
+			},
+			dns.RcodeRefused,
+			false,
+		},
+		{
+			"Blacklist 4 Single IP ALLOWED",
+			caddy.NewTestController("dns", `
+			firewall example.org {
+				block type A net 192.168.1.2
+			}`),
+			args{
+				"www.example.org.",
+				"192.168.1.3",
+				dns.TypeAAAA,
+			},
+			dns.RcodeSuccess,
+			false,
+		},
+		{
 			"Whitelist 1 ALLOWED",
 			caddy.NewTestController("dns", `
 			firewall example.org {

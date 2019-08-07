@@ -13,8 +13,8 @@ import (
 	"github.com/coredns/coredns/plugin"
 	"github.com/coredns/coredns/plugin/metrics"
 	"github.com/coredns/coredns/plugin/pkg/log"
-	"github.com/miekg/dns"
 	"github.com/ihac/firewall/firewall/filter"
+	"github.com/miekg/dns"
 )
 
 const (
@@ -138,7 +138,7 @@ func parseFirewall(c *caddy.Controller) (firewall, error) {
 				}
 				sources = append(sources, *source)
 			}
-			p.filter, err = filter.New("naive", sources)
+			p.filter, err = filter.New("cuckoo", sources)
 			if err != nil {
 				return f, c.Errf("Unable to initialize filter: %v", err)
 			}
