@@ -220,16 +220,29 @@ Cons:
 
 As we mentioned earlier, there are two metrics that we do not want to hurt, or as less as possible if we have to: throughput and latency.
 
-To measure the performance burden introduced by our plugin, we splited the experiment into two groups: treatment group and control group. In treatment group we tested the CoreDNS with our plugin enabled, while in control group, we didn't use our plugin. Below are the results of benchmark.
+To measure the performance burden introduced by our plugin, we split the experiment into two groups: treatment group and control group. In treatment group we test the CoreDNS with our plugin enabled, while in control group, we don't use our plugin. Below are the results of benchmark.
 
 ![image-20190801033828019](./images/throughput.png)
 
-### ![image-20190801034810627](./images/latency.png)
+![image-20190801034810627](./images/latency.png)
 
 ### Optimization
 
-- [ ] Bloom Filter (progress 10%)
-- [ ] Trie (progress 70%)
+To better understand how different filtering techniques affect the performance of CoreDNS, We refactor the original filtering logic and introduce a new interface, `Filter`, which represents all possible ways to check whether an IP address is in a large pool.
+
+We plan to support at least 3 different **single** filters and 2 **composite** filters. Currently only 2 single filters are supported:
+
+- [x] Naive Traversing Filter
+- [x] ~~Bloom Filter~~
+- [x] Cuckoo Filter
+- [x] Trie Filter
+- [ ] Cuckoo + Trie (progress 70%)
+- [ ] Cuckoo + Trie + Fallback (progress 0%)
 
 
+To measure the performance burden introduced by different filters, we test them separately by setting the proper filter type. Here are the results of benchmark:
+
+![Screen Shot 2019-08-08 at 1.45.06 AM](./images/optimization_throughput.png)
+
+![Screen Shot 2019-08-08 at 1.48.43 AM](./images/optimization_latency.png)
 
