@@ -1,4 +1,4 @@
-package firewall
+package acl
 
 import (
 	"context"
@@ -9,10 +9,10 @@ import (
 	"github.com/coredns/coredns/plugin/metrics"
 	"github.com/coredns/coredns/request"
 	"github.com/miekg/dns"
-	"github.com/ihac/firewall/firewall/filter"
+	"github.com/ihac/acl/acl/filter"
 )
 
-type firewall struct {
+type acl struct {
 	Next plugin.Handler
 
 	Rules []Rule
@@ -41,9 +41,9 @@ const (
 	BLOCK string = "block"
 )
 
-func (f firewall) ServeDNS(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) (int, error) {
+func (a acl) ServeDNS(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) (int, error) {
 	state := request.Request{W: w, Req: r}
-	for _, rule := range f.Rules {
+	for _, rule := range a.Rules {
 		// check zone
 		zone := plugin.Zones(rule.Zones).Matches(state.Name())
 		if zone == "" {
@@ -63,7 +63,7 @@ func (f firewall) ServeDNS(ctx context.Context, w dns.ResponseWriter, r *dns.Msg
 		}
 	}
 	RequestAllowCount.WithLabelValues(metrics.WithServer(ctx)).Inc()
-	return plugin.NextOrFailure(state.Name(), f.Next, ctx, w, r)
+	return plugin.NextOrFailure(state.Name(), a.Next, ctx, w, r)
 }
 
 func shouldBlock(policies []Policy, w dns.ResponseWriter, r *dns.Msg) (bool, error) {
@@ -98,6 +98,6 @@ func shouldBlock(policies []Policy, w dns.ResponseWriter, r *dns.Msg) (bool, err
 	return false, nil
 }
 
-func (f firewall) Name() string {
-	return "firewall"
+func (a acl) Name() string {
+	return "acl"
 }

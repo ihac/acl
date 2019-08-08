@@ -1,4 +1,4 @@
-package firewall
+package acl
 
 import (
 	"github.com/coredns/coredns/plugin"

@@ -1,4 +1,4 @@
-package firewall
+package acl
 
 import (
 	"os"
@@ -50,7 +50,7 @@ func Test_setup(t *testing.T) {
 		{
 			"Blacklist 1",
 			caddy.NewTestController("dns", `
-			firewall {
+			acl {
 				block type A net 192.168.0.0/16
 			}
 			`),
@@ -59,7 +59,7 @@ func Test_setup(t *testing.T) {
 		{
 			"Blacklist 2",
 			caddy.NewTestController("dns", `
-			firewall {
+			acl {
 				block type ANY net 192.168.0.0/16
 			}
 			`),
@@ -68,7 +68,7 @@ func Test_setup(t *testing.T) {
 		{
 			"Blacklist 3",
 			caddy.NewTestController("dns", `
-			firewall {
+			acl {
 				block type A net ANY
 			}
 			`),
@@ -77,7 +77,7 @@ func Test_setup(t *testing.T) {
 		{
 			"Blacklist 4",
 			caddy.NewTestController("dns", `
-			firewall {
+			acl {
 				allow type ANY net 192.168.1.0/24
 				block type ANY net 192.168.0.0/16
 			}
@@ -87,7 +87,7 @@ func Test_setup(t *testing.T) {
 		{
 			"Whitelist 1",
 			caddy.NewTestController("dns", `
-			firewall {
+			acl {
 				allow type ANY net 192.168.0.0/16
 				block type ANY net ANY
 			}
@@ -97,7 +97,7 @@ func Test_setup(t *testing.T) {
 		{
 			"fine-grained 1",
 			caddy.NewTestController("dns", `
-			firewall a.example.org {
+			acl a.example.org {
 				block type ANY net 192.168.1.0/24
 			}
 			`),
@@ -106,10 +106,10 @@ func Test_setup(t *testing.T) {
 		{
 			"fine-grained 2",
 			caddy.NewTestController("dns", `
-			firewall a.example.org {
+			acl a.example.org {
 				block type ANY net 192.168.1.0/24
 			}
-			firewall b.example.org {
+			acl b.example.org {
 				block type ANY net 192.168.2.0/24
 			}
 			`),
@@ -118,7 +118,7 @@ func Test_setup(t *testing.T) {
 		{
 			"multiple-networks 1",
 			caddy.NewTestController("dns", `
-			firewall example.org {
+			acl example.org {
 				block type ANY net 192.168.1.0/24 192.168.3.0/24
 			}
 			`),
@@ -127,7 +127,7 @@ func Test_setup(t *testing.T) {
 		{
 			"multiple-networks 2",
 			caddy.NewTestController("dns", `
-			firewall example.org {
+			acl example.org {
 				block type ANY net 192.168.3.0/24
 			}
 			`),
@@ -136,7 +136,7 @@ func Test_setup(t *testing.T) {
 		{
 			"Keyword PRIVATE 1",
 			caddy.NewTestController("dns", `
-			firewall example.org {
+			acl example.org {
 				block type ANY net PRIVATE
 			}
 			`),
@@ -145,7 +145,7 @@ func Test_setup(t *testing.T) {
 		{
 			"Keyword LOCAL 1",
 			caddy.NewTestController("dns", `
-			firewall example.org {
+			acl example.org {
 				allow type ANY net LOCAL
 				block type ANY net ANY
 			}
@@ -155,7 +155,7 @@ func Test_setup(t *testing.T) {
 		{
 			"Local file 1",
 			caddy.NewTestController("dns", `
-			firewall {
+			acl {
 				block type A file acl-setup-test-1.txt
 			}
 			`),
@@ -164,7 +164,7 @@ func Test_setup(t *testing.T) {
 		{
 			"Missing argument 1",
 			caddy.NewTestController("dns", `
-			firewall {
+			acl {
 				block A net 192.168.0.0/16
 			}
 			`),
@@ -173,7 +173,7 @@ func Test_setup(t *testing.T) {
 		{
 			"Missing argument 2",
 			caddy.NewTestController("dns", `
-			firewall {
+			acl {
 				block type net 192.168.0.0/16
 			}
 			`),
@@ -182,7 +182,7 @@ func Test_setup(t *testing.T) {
 		{
 			"Illegal argument 1",
 			caddy.NewTestController("dns", `
-			firewall {
+			acl {
 				block type ABC net 192.168.0.0/16
 			}
 			`),
@@ -191,7 +191,7 @@ func Test_setup(t *testing.T) {
 		{
 			"Illegal argument 2",
 			caddy.NewTestController("dns", `
-			firewall {
+			acl {
 				blck type A net 192.168.0.0/16
 			}
 			`),
@@ -200,7 +200,7 @@ func Test_setup(t *testing.T) {
 		{
 			"Illegal argument 3",
 			caddy.NewTestController("dns", `
-			firewall {
+			acl {
 				block type A net 192.168.0/16
 			}
 			`),
@@ -209,7 +209,7 @@ func Test_setup(t *testing.T) {
 		{
 			"Illegal argument 4",
 			caddy.NewTestController("dns", `
-			firewall {
+			acl {
 				block type A net 192.168.0.0/33
 			}
 			`),
