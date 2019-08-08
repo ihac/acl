@@ -19,6 +19,8 @@ func New(filterType string, subnets []net.IPNet) (Filter, error) {
 		return newNaiveFilter(subnets)
 	case "cuckoo":
 		return newCuckooFilter(subnets)
+	case "trie":
+		return newTrieFilter(subnets)
 	default:
 		return nil, fmt.Errorf("unrecognized filter type: %s", filterType)
 	}

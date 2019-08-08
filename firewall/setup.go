@@ -138,7 +138,7 @@ func parseFirewall(c *caddy.Controller) (firewall, error) {
 				}
 				sources = append(sources, *source)
 			}
-			p.filter, err = filter.New("cuckoo", sources)
+			p.filter, err = filter.New("trie", sources)
 			if err != nil {
 				return f, c.Errf("Unable to initialize filter: %v", err)
 			}
