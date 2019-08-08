@@ -16,6 +16,10 @@ type trieNode struct {
 }
 
 func insert(root *trieNode, subnet net.IPNet) {
+	// skip IPv6.
+	if len(subnet.IP.To4()) == 0 {
+		return
+	}
 	ip := binary.BigEndian.Uint32(subnet.IP.To4())
 	mask := binary.BigEndian.Uint32(subnet.Mask)
 	curr := root
