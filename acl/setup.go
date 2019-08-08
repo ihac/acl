@@ -1,4 +1,4 @@
-package firewall
+package acl
 
 import (
 	"bufio"
@@ -13,7 +13,7 @@ import (
 	"github.com/coredns/coredns/plugin"
 	"github.com/coredns/coredns/plugin/metrics"
 	"github.com/coredns/coredns/plugin/pkg/log"
-	"github.com/ihac/firewall/firewall/filter"
+	"github.com/ihac/acl/acl/filter"
 	"github.com/miekg/dns"
 )
 
@@ -30,21 +30,21 @@ var (
 )
 
 func init() {
-	caddy.RegisterPlugin("firewall", caddy.Plugin{
+	caddy.RegisterPlugin("acl", caddy.Plugin{
 		ServerType: "dns",
 		Action:     setup,
 	})
 }
 
 func setup(c *caddy.Controller) error {
-	f, err := parseFirewall(c)
+	a, err := parseACL(c)
 	if err != nil {
 		return err
 	}
 
 	dnsserver.GetConfig(c).AddPlugin(func(next plugin.Handler) plugin.Handler {
-		f.Next = next
-		return f
+		a.Next = next
+		return a
 	})
 
 	// Register all metrics.
@@ -55,10 +55,10 @@ func setup(c *caddy.Controller) error {
 	return nil
 }
 
-func parseFirewall(c *caddy.Controller) (firewall, error) {
-	f := firewall{}
+func parseACL(c *caddy.Controller) (acl, error) {
+	a := acl{}
 	/*
-	 * firewall [ZONES...] {
+	 * acl [ZONES...] {
 	 *   ACTION type QTYPE net SOURCE
 	 *   ...
 	 * }
@@ -67,7 +67,6 @@ func parseFirewall(c *caddy.Controller) (firewall, error) {
 	 */
 	for c.Next() {
 		r := Rule{}
-		// load <ZONES...>.
 		// load <ZONES...>.
 		r.Zones = c.RemainingArgs()
 		if len(r.Zones) == 0 {
@@ -87,27 +86,26 @@ func parseFirewall(c *caddy.Controller) (firewall, error) {
 			// ACTION type QTYPE net SOURCE
 			p.action = strings.ToLower(c.Val())
 			if p.action != ALLOW && p.action != BLOCK {
-				return f, c.Errf("Unexpected token '%s'; expect '%s' or '%s'", c.Val(), ALLOW, BLOCK)
+				return a, c.Errf("Unexpected token '%s'; expect '%s' or '%s'", c.Val(), ALLOW, BLOCK)
 			}
 
-			// TODO: simplify the syntax and remove tedious code. (@ihac)
 			if !c.NextArg() {
-				return f, c.ArgErr()
+				return a, c.ArgErr()
 			}
 			if strings.ToLower(c.Val()) != "type" {
-				return f, c.Errf("Unexpected token '%s'; expect 'type'", c.Val())
+				return a, c.Errf("Unexpected token '%s'; expect 'type'", c.Val())
 			}
 
 			if !c.NextArg() {
-				return f, c.ArgErr()
+				return a, c.ArgErr()
 			}
 			p.qtype, err = parseQype(c.Val())
 			if err != nil {
-				return f, err
+				return a, err
 			}
 
 			if !c.NextArg() {
-				return f, c.ArgErr()
+				return a, c.ArgErr()
 			}
 
 			var rawNetRanges []string
@@ -116,37 +114,37 @@ func parseFirewall(c *caddy.Controller) (firewall, error) {
 				rawNetRanges = preprocessNetworks(c.RemainingArgs())
 			} else if sourceType == "file" {
 				if !c.NextArg() {
-					return f, c.ArgErr()
+					return a, c.ArgErr()
 				}
 				rawNetRanges, err = loadNetworksFromLocalFile(c.Val())
 				if err != nil {
-					return f, c.Errf("Unable to load networks from local file: %v", err)
+					return a, c.Errf("Unable to load networks from local file: %v", err)
 				}
 			} else {
-				return f, c.Errf("Unexpected token '%s'; expect 'net'", c.Val())
+				return a, c.Errf("Unexpected token '%s'; expect 'net'", c.Val())
 			}
 
 			if len(rawNetRanges) == 0 {
-				return f, c.Errf("no network is specified")
+				return a, c.Errf("no network is specified")
 			}
 			var sources []net.IPNet
 			for _, rawNet := range rawNetRanges {
 				rawNet = normalize(rawNet)
 				_, source, err := net.ParseCIDR(rawNet)
 				if err != nil {
-					return f, c.Errf("Illegal CIDR notation '%s'", rawNet)
+					return a, c.Errf("Illegal CIDR notation '%s'", rawNet)
 				}
 				sources = append(sources, *source)
 			}
-			p.filter, err = filter.New("trie", sources)
+			p.filter, err = filter.New("naive", sources)
 			if err != nil {
-				return f, c.Errf("Unable to initialize filter: %v", err)
+				return a, c.Errf("Unable to initialize filter: %v", err)
 			}
 			r.Policies = append(r.Policies, p)
 		}
-		f.Rules = append(f.Rules, r)
+		a.Rules = append(a.Rules, r)
 	}
-	return f, nil
+	return a, nil
 }
 
 func normalize(rawNet string) string {
@@ -178,7 +176,6 @@ func preprocessNetworks(rawNets []string) []string {
 				}
 				for _, addr := range addrs {
 					n := addr.String()
-					// TODO: support IPv6. (@ihac)
 					// ":" should be enough to distinguish IPv4 and IPv6.
 					if strings.Contains(n, ":") {
 						continue
@@ -217,6 +214,7 @@ func loadNetworksFromLocalFile(fileName string) ([]string, error) {
 	return nets, nil
 }
 
+// remove comments.
 func stripComment(line string) string {
 	commentCh := "#"
 	if idx := strings.IndexAny(line, commentCh); idx >= 0 {

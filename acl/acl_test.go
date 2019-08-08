@@ -1,4 +1,4 @@
-package firewall
+package acl
 
 import (
 	"context"
@@ -10,8 +10,8 @@ import (
 	"github.com/miekg/dns"
 )
 
-var firewallTestFiles = map[string]string{
-	"acl-firewall-test-1.txt": `192.168.1.0/24`,
+var aclTestFiles = map[string]string{
+	"acl-test-1.txt": `192.168.1.0/24`,
 }
 
 type testResponseWriter struct {
@@ -66,9 +66,9 @@ func NewTestControllerWithZones(serverType, input string, zones []string) *caddy
 	return ctr
 }
 
-func Test_firewall_ServeDNS(t *testing.T) {
-	envSetup(firewallTestFiles)
-	defer envCleanup(firewallTestFiles)
+func Test_acl_ServeDNS(t *testing.T) {
+	envSetup(aclTestFiles)
+	defer envCleanup(aclTestFiles)
 
 	type args struct {
 		domain   string
@@ -85,7 +85,7 @@ func Test_firewall_ServeDNS(t *testing.T) {
 		{
 			"Blacklist 1 BLOCKED",
 			caddy.NewTestController("dns", `
-			firewall example.org {
+			acl example.org {
 				block type A net 192.168.0.0/16
 			}`),
 			args{
@@ -99,7 +99,7 @@ func Test_firewall_ServeDNS(t *testing.T) {
 		{
 			"Blacklist 1 ALLOWED",
 			caddy.NewTestController("dns", `
-			firewall example.org {
+			acl example.org {
 				block type A net 192.168.0.0/16
 			}`),
 			args{
@@ -113,7 +113,7 @@ func Test_firewall_ServeDNS(t *testing.T) {
 		{
 			"Blacklist 2 BLOCKED",
 			caddy.NewTestController("dns", `
-			firewall example.org {
+			acl example.org {
 				block type ANY net 192.168.0.0/16
 			}`),
 			args{
@@ -127,7 +127,7 @@ func Test_firewall_ServeDNS(t *testing.T) {
 		{
 			"Blacklist 3 BLOCKED",
 			caddy.NewTestController("dns", `
-			firewall example.org {
+			acl example.org {
 				block type A net ANY
 			}`),
 			args{
@@ -141,7 +141,7 @@ func Test_firewall_ServeDNS(t *testing.T) {
 		{
 			"Blacklist 3 ALLOWED",
 			caddy.NewTestController("dns", `
-			firewall example.org {
+			acl example.org {
 				block type A net ANY
 			}`),
 			args{
@@ -155,7 +155,7 @@ func Test_firewall_ServeDNS(t *testing.T) {
 		{
 			"Blacklist 4 Single IP BLOCKED",
 			caddy.NewTestController("dns", `
-			firewall example.org {
+			acl example.org {
 				block type A net 192.168.1.2
 			}`),
 			args{
@@ -169,7 +169,7 @@ func Test_firewall_ServeDNS(t *testing.T) {
 		{
 			"Blacklist 4 Single IP ALLOWED",
 			caddy.NewTestController("dns", `
-			firewall example.org {
+			acl example.org {
 				block type A net 192.168.1.2
 			}`),
 			args{
@@ -183,7 +183,7 @@ func Test_firewall_ServeDNS(t *testing.T) {
 		{
 			"Whitelist 1 ALLOWED",
 			caddy.NewTestController("dns", `
-			firewall example.org {
+			acl example.org {
 				allow type ANY net 192.168.0.0/16
 				block type ANY net ANY
 			}`),
@@ -198,7 +198,7 @@ func Test_firewall_ServeDNS(t *testing.T) {
 		{
 			"Whitelist 1 REFUSED",
 			caddy.NewTestController("dns", `
-			firewall example.org {
+			acl example.org {
 				allow type ANY net 192.168.0.0/16
 				block type ANY net ANY
 			}`),
@@ -213,7 +213,7 @@ func Test_firewall_ServeDNS(t *testing.T) {
 		{
 			"Fine-Grained 1 REFUSED",
 			NewTestControllerWithZones("dns", `
-			firewall a.example.org {
+			acl a.example.org {
 				block type ANY net 192.168.1.0/24
 			}`, []string{"example.org"}),
 			args{
@@ -227,7 +227,7 @@ func Test_firewall_ServeDNS(t *testing.T) {
 		{
 			"Fine-Grained 1 ALLOWED",
 			NewTestControllerWithZones("dns", `
-			firewall a.example.org {
+			acl a.example.org {
 				block type ANY net 192.168.1.0/24
 			}`, []string{"example.org"}),
 			args{
@@ -241,7 +241,7 @@ func Test_firewall_ServeDNS(t *testing.T) {
 		{
 			"Fine-Grained 2 REFUSED",
 			NewTestControllerWithZones("dns", `
-			firewall {
+			acl {
 				block type ANY net 192.168.1.0/24
 			}`, []string{"example.org"}),
 			args{
@@ -255,7 +255,7 @@ func Test_firewall_ServeDNS(t *testing.T) {
 		{
 			"Fine-Grained 2 ALLOWED",
 			NewTestControllerWithZones("dns", `
-			firewall {
+			acl {
 				block type ANY net 192.168.1.0/24
 			}`, []string{"example.org"}),
 			args{
@@ -269,10 +269,10 @@ func Test_firewall_ServeDNS(t *testing.T) {
 		{
 			"Fine-Grained 2 REFUSED",
 			NewTestControllerWithZones("dns", `
-			firewall a.example.org {
+			acl a.example.org {
 				block type ANY net 192.168.1.0/24
 			}
-			firewall b.example.org {
+			acl b.example.org {
 				block type ANY net 192.168.2.0/24
 			}`, []string{"example.org"}),
 			args{
@@ -286,10 +286,10 @@ func Test_firewall_ServeDNS(t *testing.T) {
 		{
 			"Fine-Grained 2 ALLOWED",
 			NewTestControllerWithZones("dns", `
-			firewall a.example.org {
+			acl a.example.org {
 				block type ANY net 192.168.1.0/24
 			}
-			firewall b.example.org {
+			acl b.example.org {
 				block type ANY net 192.168.2.0/24
 			}`, []string{"example.org"}),
 			args{
@@ -303,7 +303,7 @@ func Test_firewall_ServeDNS(t *testing.T) {
 		{
 			"Keyword PRIVATE 1 Blocked",
 			caddy.NewTestController("dns", `
-			firewall example.com {
+			acl example.com {
 				block type ANY net PRIVATE
 			}`),
 			args{
@@ -317,7 +317,7 @@ func Test_firewall_ServeDNS(t *testing.T) {
 		{
 			"Keyword LOCAL 1 Blocked",
 			caddy.NewTestController("dns", `
-			firewall example.com {
+			acl example.com {
 				allow type ANY net LOCAL
 				block type ANY net ANY
 			}`),
@@ -333,7 +333,7 @@ func Test_firewall_ServeDNS(t *testing.T) {
 		{
 			"Keyword LOCAL 1 Allowed",
 			caddy.NewTestController("dns", `
-			firewall example.com {
+			acl example.com {
 				allow type ANY net LOCAL
 				block type ANY net ANY
 			}`),
@@ -349,8 +349,8 @@ func Test_firewall_ServeDNS(t *testing.T) {
 		{
 			"Local file 1 Blocked",
 			caddy.NewTestController("dns", `
-			firewall example.com {
-				block type ANY file acl-firewall-test-1.txt
+			acl example.com {
+				block type ANY file acl-test-1.txt
 			}`),
 			args{
 				"a.example.com.",
@@ -363,8 +363,8 @@ func Test_firewall_ServeDNS(t *testing.T) {
 		{
 			"Local file 1 Allowed",
 			caddy.NewTestController("dns", `
-			firewall example.com {
-				block type ANY file acl-firewall-test-1.txt
+			acl example.com {
+				block type ANY file acl-test-1.txt
 			}`),
 			args{
 				"a.example.com.",
@@ -380,23 +380,23 @@ func Test_firewall_ServeDNS(t *testing.T) {
 	ctx := context.Background()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			f, err := parseFirewall(tt.ctr)
-			f.Next = test.NextHandler(dns.RcodeSuccess, nil)
+			a, err := parseACL(tt.ctr)
+			a.Next = test.NextHandler(dns.RcodeSuccess, nil)
 			if err != nil {
-				t.Errorf("cannot parse firewall from config: %v", err)
+				t.Errorf("cannot parse acl from config: %v", err)
 			}
 
 			w := &testResponseWriter{}
 			m := new(dns.Msg)
 			w.setRemoteIP(tt.args.sourceIP)
 			m.SetQuestion(tt.args.domain, tt.args.qtype)
-			_, err = f.ServeDNS(ctx, w, m)
+			_, err = a.ServeDNS(ctx, w, m)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("firewall.ServeDNS() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("acl.ServeDNS() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if w.Rcode != tt.wantRcode {
-				t.Errorf("firewall.ServeDNS() Rcode = %v, want %v", w.Rcode, tt.wantRcode)
+				t.Errorf("acl.ServeDNS() Rcode = %v, want %v", w.Rcode, tt.wantRcode)
 			}
 		})
 	}
