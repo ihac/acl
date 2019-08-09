@@ -8,8 +8,8 @@ import (
 	"github.com/coredns/coredns/plugin"
 	"github.com/coredns/coredns/plugin/metrics"
 	"github.com/coredns/coredns/request"
-	"github.com/miekg/dns"
 	"github.com/ihac/acl/acl/filter"
+	"github.com/miekg/dns"
 )
 
 type acl struct {
@@ -29,9 +29,9 @@ type Rule struct {
 // A policy performs the specified action (block/allow) on all DNS queries
 // matched by source IP or QTYPE.
 type Policy struct {
-	action  string
-	qtype   dns.Type
-	filter  filter.Filter
+	action string
+	qtype  uint16
+	filter filter.Filter
 }
 
 const (
@@ -84,7 +84,7 @@ func shouldBlock(policies []Policy, w dns.ResponseWriter, r *dns.Msg) (bool, err
 			continue
 		}
 
-		if dns.Type(qtype) != policy.qtype && policy.qtype != QtypeAll {
+		if qtype != policy.qtype && policy.qtype != QtypeAll {
 			continue
 		}
 		// matched.

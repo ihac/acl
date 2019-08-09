@@ -20,7 +20,7 @@ import (
 const (
 	// QtypeAll is used to match any kinds of DNS records type.
 	// NOTE: The value of QtypeAll should be different with other QTYPEs defined in miekg/dns.
-	QtypeAll dns.Type = 260
+	QtypeAll uint16 = dns.TypeANY
 )
 
 var (
@@ -63,7 +63,7 @@ func parseACL(c *caddy.Controller) (acl, error) {
 	 *   ...
 	 * }
 	 *
-	 * ACTION: allow|block
+	 * ACTION: allow | block
 	 */
 	for c.Next() {
 		r := Rule{}
@@ -136,7 +136,9 @@ func parseACL(c *caddy.Controller) (acl, error) {
 				}
 				sources = append(sources, *source)
 			}
-			p.filter, err = filter.New("naive", sources)
+
+			// TODO: do not hard code 'trie' here. (@ihac)
+			p.filter, err = filter.New("trie", sources)
 			if err != nil {
 				return a, c.Errf("Unable to initialize filter: %v", err)
 			}
@@ -147,6 +149,7 @@ func parseACL(c *caddy.Controller) (acl, error) {
 	return a, nil
 }
 
+// normalize appends '/32' for any single ip address.
 func normalize(rawNet string) string {
 	if idx := strings.IndexAny(rawNet, "/"); idx >= 0 {
 		return rawNet
@@ -225,84 +228,84 @@ func stripComment(line string) string {
 }
 
 // TODO: dns.Type == QType? (@ihac)
-func parseQype(raw string) (dns.Type, error) {
+func parseQype(raw string) (uint16, error) {
 	switch raw {
 	case "A":
-		return dns.Type(dns.TypeA), nil
+		return dns.TypeA, nil
 	case "AAAA":
-		return dns.Type(dns.TypeAAAA), nil
+		return dns.TypeAAAA, nil
 	case "AFSDB":
-		return dns.Type(dns.TypeAFSDB), nil
+		return dns.TypeAFSDB, nil
 	case "CAA":
-		return dns.Type(dns.TypeCAA), nil
+		return dns.TypeCAA, nil
 	case "CDNSKEY":
-		return dns.Type(dns.TypeCDNSKEY), nil
+		return dns.TypeCDNSKEY, nil
 	case "CDS":
-		return dns.Type(dns.TypeCDS), nil
+		return dns.TypeCDS, nil
 	case "CERT":
-		return dns.Type(dns.TypeCERT), nil
+		return dns.TypeCERT, nil
 	case "CNAME":
-		return dns.Type(dns.TypeCNAME), nil
+		return dns.TypeCNAME, nil
 	case "DHCID":
-		return dns.Type(dns.TypeDHCID), nil
+		return dns.TypeDHCID, nil
 	case "DLV":
-		return dns.Type(dns.TypeDLV), nil
+		return dns.TypeDLV, nil
 	case "DNAME":
-		return dns.Type(dns.TypeDNAME), nil
+		return dns.TypeDNAME, nil
 	case "DNSKEY":
-		return dns.Type(dns.TypeDNSKEY), nil
+		return dns.TypeDNSKEY, nil
 	case "DS":
-		return dns.Type(dns.TypeDS), nil
+		return dns.TypeDS, nil
 	case "HIP":
-		return dns.Type(dns.TypeHIP), nil
+		return dns.TypeHIP, nil
 	case "KEY":
-		return dns.Type(dns.TypeKEY), nil
+		return dns.TypeKEY, nil
 	case "KX":
-		return dns.Type(dns.TypeKX), nil
+		return dns.TypeKX, nil
 	case "LOC":
-		return dns.Type(dns.TypeLOC), nil
+		return dns.TypeLOC, nil
 	case "MX":
-		return dns.Type(dns.TypeMX), nil
+		return dns.TypeMX, nil
 	case "NAPTR":
-		return dns.Type(dns.TypeNAPTR), nil
+		return dns.TypeNAPTR, nil
 	case "NS":
-		return dns.Type(dns.TypeNS), nil
+		return dns.TypeNS, nil
 	case "NSEC":
-		return dns.Type(dns.TypeNSEC), nil
+		return dns.TypeNSEC, nil
 	case "NSEC3":
-		return dns.Type(dns.TypeNSEC3), nil
+		return dns.TypeNSEC3, nil
 	case "NSEC3PARAM":
-		return dns.Type(dns.TypeNSEC3PARAM), nil
+		return dns.TypeNSEC3PARAM, nil
 	case "OPENPGPKEY":
-		return dns.Type(dns.TypeOPENPGPKEY), nil
+		return dns.TypeOPENPGPKEY, nil
 	case "PTR":
-		return dns.Type(dns.TypePTR), nil
+		return dns.TypePTR, nil
 	case "RRSIG":
-		return dns.Type(dns.TypeRRSIG), nil
+		return dns.TypeRRSIG, nil
 	case "RP":
-		return dns.Type(dns.TypeRP), nil
+		return dns.TypeRP, nil
 	case "SIG":
-		return dns.Type(dns.TypeSIG), nil
+		return dns.TypeSIG, nil
 	case "SMIMEA":
-		return dns.Type(dns.TypeSMIMEA), nil
+		return dns.TypeSMIMEA, nil
 	case "SOA":
-		return dns.Type(dns.TypeSOA), nil
+		return dns.TypeSOA, nil
 	case "SRV":
-		return dns.Type(dns.TypeSRV), nil
+		return dns.TypeSRV, nil
 	case "SSHFP":
-		return dns.Type(dns.TypeSSHFP), nil
+		return dns.TypeSSHFP, nil
 	case "TA":
-		return dns.Type(dns.TypeTA), nil
+		return dns.TypeTA, nil
 	case "TKEY":
-		return dns.Type(dns.TypeTKEY), nil
+		return dns.TypeTKEY, nil
 	case "TLSA":
-		return dns.Type(dns.TypeTLSA), nil
+		return dns.TypeTLSA, nil
 	case "TSIG":
-		return dns.Type(dns.TypeTSIG), nil
+		return dns.TypeTSIG, nil
 	case "TXT":
-		return dns.Type(dns.TypeTXT), nil
+		return dns.TypeTXT, nil
 	case "URI":
-		return dns.Type(dns.TypeURI), nil
+		return dns.TypeURI, nil
 	case "ANY":
 		fallthrough
 	case "*":
