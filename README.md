@@ -1,3 +1,5 @@
+NOTE: This plugin is going to be merged into CoreDNS repo (https://github.com/coredns/coredns/pull/3103). Will refactor this as a fork. 
+
 # firewall
 [![Build Status](https://travis-ci.com/ihac/firewall.svg?branch=master)](https://travis-ci.com/ihac/firewall)
 [![codecov](https://codecov.io/gh/ihac/firewall/branch/master/graph/badge.svg)](https://codecov.io/gh/ihac/firewall)
